@@ -28,6 +28,9 @@ class SessionTimeoutMiddleware(MiddlewareMixin):
 
         if session_is_expired:
             request.session.flush()
+            expire_callable = getattr(settings, "SESSION_EXPIRE_CALLABLE", None)
+            if callable(expire_callable):
+                return expire_callable(request)
             redirect_url = getattr(settings, "SESSION_TIMEOUT_REDIRECT", None)
             if redirect_url:
                 return redirect(redirect_url)
