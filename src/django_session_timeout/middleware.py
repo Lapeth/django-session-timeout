@@ -3,6 +3,7 @@ import time
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect
+from django.utils.module_loading import import_string
 
 try:
     from django.utils.deprecation import MiddlewareMixin
@@ -29,8 +30,10 @@ class SessionTimeoutMiddleware(MiddlewareMixin):
         if session_is_expired:
             request.session.flush()
             expire_callable = getattr(settings, "SESSION_EXPIRE_CALLABLE", None)
-            if callable(expire_callable):
-                return expire_callable(request)
+            if type(expire_callable) == str:
+                expire_callable = import_string(expire_callable)
+                if callable(expire_callable):
+                    return expire_callable(request)
             redirect_url = getattr(settings, "SESSION_TIMEOUT_REDIRECT", None)
             if redirect_url:
                 return redirect(redirect_url)
